@@ -1,0 +1,15 @@
+# VSCode
+.vscode/
+
+# CMake
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+
+# Built things
+vita-timer
+vita-timer.*
+
+# :P
+hud.psd
