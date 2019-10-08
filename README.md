@@ -8,12 +8,12 @@
 
 vita-timer is a mediocre stopwatch/timer homebrew app for PS Vita. Made with no particular reason other than learning about vitasdk.
 
-This is my first C++ program ever, so please be kind to all those ugly codes written by a Java maniac.
+This is my first C++ program ever, so please be kind to those ugly codes written by a Java maniac.
 
 ## Features
 
 * Stopwatch
-* Timer (with no sound at all)
+* Timer (with beep)
 
 ## Building
 
