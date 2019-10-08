@@ -11,6 +11,7 @@
 #include <psp2/system_param.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <soloud.h>
 
 #include "engine.hh"
 
@@ -33,6 +34,9 @@ Engine::Engine() {
     
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_GL_SetSwapInterval(1);
+
+    // init soloud
+    soloud.init();
 }
 
 void Engine::run() {
@@ -54,6 +58,7 @@ void Engine::run() {
     
     // cleanup
     // is this necessary? seems like this won't be called anyway
+    soloud.deinit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     window = NULL;

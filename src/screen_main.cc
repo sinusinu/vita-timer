@@ -29,6 +29,12 @@ void MainScreen::init(Engine* engine) {
     else tmp = IMG_Load("app0:/assets/hud_us.png");
     tx_hud = SDL_CreateTextureFromSurface(en->renderer, tmp);
     SDL_FreeSurface(tmp);
+
+    // load sounds
+    sl_beep.load("app0:/assets/beep.wav");
+    sl_beep.setLooping(true);
+    sl_g.load("app0:/assets/g.wav");
+    sl_c.load("app0:/assets/c.wav");
 }
 
 void MainScreen::update() {
@@ -52,6 +58,7 @@ void MainScreen::update() {
             // time's up, switch to finished state
             timer_status = 3;
             rect_hud_draw = &rect_hud_t_finished;
+            slh_beep = en->soloud.play(sl_beep);
         } else {
             // update timer clock
             SceUInt64 time_left = (timer_target_time - tick.tick) / 1000000;
@@ -129,18 +136,21 @@ void MainScreen::key_down(int btn) {
                     reset_clock();
                     stopwatch_started_time = tick.tick;
                     rect_hud_draw = &rect_hud_s_running;
+                    en->soloud.play(sl_c);
                     break;
                 case 1:
                     // running: pause stopwatch
                     stopwatch_status = 2;
                     stopwatch_paused_time = tick.tick;
                     rect_hud_draw = &rect_hud_s_paused;
+                    en->soloud.play(sl_g);
                     break;
                 case 2:
                     // paused: resume stopwatch
                     stopwatch_status = 1;
                     stopwatch_started_time += tick.tick - stopwatch_paused_time;
                     rect_hud_draw = &rect_hud_s_running;
+                    en->soloud.play(sl_c);
                     break;
             }
         } else {
@@ -158,12 +168,14 @@ void MainScreen::key_down(int btn) {
                         if (ttime == 0) {
                             timer_status = 3;
                             rect_hud_draw = &rect_hud_t_finished;
+                            slh_beep = en->soloud.play(sl_beep);
                         } else {
                             timer_status = 1;
                             ttime = ttime * 1000000;
                             timer_target_time = tick.tick + ttime;
                             timer_started_time = tick.tick;
                             rect_hud_draw = &rect_hud_t_running;
+                            en->soloud.play(sl_c);
                         }
                     }
                     break;
@@ -172,6 +184,7 @@ void MainScreen::key_down(int btn) {
                     timer_status = 2;
                     timer_paused_time = tick.tick;
                     rect_hud_draw = &rect_hud_t_paused;
+                    en->soloud.play(sl_g);
                     break;
                 case 2:
                     // paused: resume timer
@@ -179,6 +192,7 @@ void MainScreen::key_down(int btn) {
                     timer_target_time += (tick.tick - timer_paused_time);
                     timer_started_time += (tick.tick - timer_paused_time);
                     rect_hud_draw = &rect_hud_t_running;
+                    en->soloud.play(sl_c);
                     break;
                 case 3:
                     // finished: reset
@@ -189,6 +203,8 @@ void MainScreen::key_down(int btn) {
                     reset_clock();
                     is_clock_visible = true;
                     rect_hud_draw = &rect_hud_t_idle;
+                    en->soloud.stop(slh_beep);
+                    en->soloud.play(sl_c);
                     break;
             }
         }
@@ -201,12 +217,14 @@ void MainScreen::key_down(int btn) {
                     stopwatch_status = 0;
                     reset_clock();
                     rect_hud_draw = &rect_hud_s_idle;
+                    en->soloud.play(sl_c);
                     break;
                 case 2:
                     // paused: reset
                     stopwatch_status = 0;
                     reset_clock();
                     rect_hud_draw = &rect_hud_s_idle;
+                    en->soloud.play(sl_c);
                     break;
             }
         } else {
@@ -219,6 +237,7 @@ void MainScreen::key_down(int btn) {
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
                     reset_clock();
                     rect_hud_draw = &rect_hud_t_idle;
+                    en->soloud.play(sl_c);
                     break;
                 case 1:
                     // running: reset
@@ -228,6 +247,7 @@ void MainScreen::key_down(int btn) {
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
                     reset_clock();
                     rect_hud_draw = &rect_hud_t_idle;
+                    en->soloud.play(sl_c);
                     break;
                 case 2:
                     // paused: reset
@@ -237,6 +257,7 @@ void MainScreen::key_down(int btn) {
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
                     reset_clock();
                     rect_hud_draw = &rect_hud_t_idle;
+                    en->soloud.play(sl_c);
                     break;
             }
         }
@@ -255,6 +276,7 @@ void MainScreen::key_down(int btn) {
                     break;
             }
             reset_clock();
+            en->soloud.play(sl_c);
         }
     } else if (btn == SCE_CTRL_LEFT) {
         if (mode == 1 && timer_status == 0) {
@@ -263,6 +285,7 @@ void MainScreen::key_down(int btn) {
             if (timer_editing_digit == 2 || timer_editing_digit == 5) timer_editing_digit--;
             rect_number_u_dest.x = 80 + (100 * timer_editing_digit);
             rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
+            en->soloud.play(sl_g);
         }
     } else if (btn == SCE_CTRL_RIGHT) {
         if (mode == 1 && timer_status == 0) {
@@ -271,6 +294,7 @@ void MainScreen::key_down(int btn) {
             if (timer_editing_digit == 2 || timer_editing_digit == 5) timer_editing_digit++;
             rect_number_u_dest.x = 80 + (100 * timer_editing_digit);
             rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
+            en->soloud.play(sl_g);
         }
     } else if (btn == SCE_CTRL_UP) {
         if (mode == 1 && timer_status == 0) {
@@ -292,6 +316,7 @@ void MainScreen::key_down(int btn) {
                     }
                     break;
             }
+            en->soloud.play(sl_g);
         }
     } else if (btn == SCE_CTRL_DOWN) {
         if (mode == 1 && timer_status == 0) {
@@ -313,6 +338,7 @@ void MainScreen::key_down(int btn) {
                     }
                     break;
             }
+            en->soloud.play(sl_g);
         }
     }
 }

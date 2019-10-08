@@ -9,6 +9,7 @@
 
 #include <psp2/rtc.h>
 #include <SDL2/SDL.h>
+#include <soloud_wav.h>
 
 class Engine;
 
@@ -66,6 +67,11 @@ public:
 
     SDL_Rect* rect_number_title_draw = &rect_number_s;
     SDL_Rect* rect_hud_draw = &rect_hud_s_idle;
+
+    SoLoud::Wav sl_beep;
+    SoLoud::Wav sl_g;
+    SoLoud::Wav sl_c;
+    int slh_beep;
 
     int mode = 0;
     int bottom_text = 0;

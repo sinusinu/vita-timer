@@ -11,6 +11,7 @@
 #include <psp2/ctrl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <soloud.h>
 
 #include "screen.hh"
 
@@ -29,6 +30,8 @@ public:
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Surface* surface = NULL;
+
+    SoLoud::Soloud soloud;
 
     Screen* current_screen;
     

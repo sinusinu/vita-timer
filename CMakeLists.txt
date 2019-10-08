@@ -27,6 +27,8 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
+  soloud
+  pthread
   SDL2
   SDL2_image
   vita2d
