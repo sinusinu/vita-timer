@@ -92,4 +92,8 @@ public:
 
     bool is_clock_visible = true;
     int clock_disp[8] = {0, 0, 10, 0, 0, 10, 0, 0};
+
+    // timer for preventing system from entering suspend mode
+    SceUInt64 powertick_last_tick_time = 0;
+    const SceUInt64 powertick_interval = 10 * 1000 * 1000;
 };

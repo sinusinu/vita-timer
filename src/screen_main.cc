@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include <psp2/kernel/processmgr.h>
+
 #include "engine.hh"
 #include "screen.hh"
 #include "buttons.hh"
@@ -53,6 +55,12 @@ void MainScreen::update() {
         clock_disp[4] = min % 10;
         clock_disp[6] = sec / 10;
         clock_disp[7] = sec % 10;
+
+        // signal system to prevent it from entering suspend mode
+        if (powertick_last_tick_time + powertick_interval < tick.tick) {
+            sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
+            powertick_last_tick_time = tick.tick;
+        }
     } else if (mode == 1 && timer_status == 1) {
         if (timer_target_time < tick.tick) {
             // time's up, switch to finished state
@@ -71,10 +79,22 @@ void MainScreen::update() {
             clock_disp[4] = min % 10;
             clock_disp[6] = sec / 10;
             clock_disp[7] = sec % 10;
+
+            // signal system to prevent it from entering suspend mode
+            if (powertick_last_tick_time + powertick_interval < tick.tick) {
+                sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
+                powertick_last_tick_time = tick.tick;
+            }
         }
     } else if (mode == 1 && timer_status == 3) {
         // blink clock
         is_clock_visible = (((tick.tick - timer_target_time) / 500000) & 1 == 1);
+        
+        // signal system to prevent it from entering suspend mode
+        if (powertick_last_tick_time + powertick_interval < tick.tick) {
+            sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
+            powertick_last_tick_time = tick.tick;
+        }
     }
 
     // render
@@ -135,6 +155,7 @@ void MainScreen::key_down(int btn) {
                     stopwatch_status = 1;
                     reset_clock();
                     stopwatch_started_time = tick.tick;
+                    powertick_last_tick_time = tick.tick;
                     rect_hud_draw = &rect_hud_s_running;
                     en->soloud.play(sl_c);
                     break;
