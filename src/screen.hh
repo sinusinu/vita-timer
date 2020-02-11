@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <psp2/kernel/threadmgr.h> 
 #include <psp2/rtc.h>
 #include <SDL2/SDL.h>
 #include <soloud_wav.h>
@@ -30,6 +31,9 @@ public:
     
     void ResetClock();
     void DrawClock();
+
+    void StartPowerTickThread();
+    void StopPowerTickThread();
     
     Engine* en;
 
@@ -96,8 +100,6 @@ public:
     int clock_disp[8] = {0, 0, 10, 0, 0, 10, 0, 0};
 
     bool is_immersive = false;
-
-    // timer for preventing system from entering suspend mode
-    SceUInt64 powertick_last_tick_time = 0;
-    const SceUInt64 powertick_interval = 10 * 1000 * 1000;
 };
+
+static bool should_power_tick = false;

@@ -14,6 +14,14 @@
 #include "screen.hh"
 #include "buttons.hh"
 
+static int PowerTick(SceSize args, void *argp) {
+    while (should_power_tick) {
+        sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DEFAULT);
+        sceKernelDelayThread(10 * 1000 * 1000);
+    }
+    return 0;
+}
+
 void MainScreen::Init(Engine* engine) {
     en = engine;
     
@@ -55,12 +63,6 @@ void MainScreen::Update() {
         clock_disp[4] = min % 10;
         clock_disp[6] = sec / 10;
         clock_disp[7] = sec % 10;
-
-        // signal system to prevent it from entering suspend mode
-        if (powertick_last_tick_time + powertick_interval < tick.tick) {
-            sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
-            powertick_last_tick_time = tick.tick;
-        }
     } else if (mode == 1 && timer_status == 1) {
         if (timer_target_time < tick.tick) {
             // time's up, switch to finished state
@@ -79,22 +81,10 @@ void MainScreen::Update() {
             clock_disp[4] = min % 10;
             clock_disp[6] = sec / 10;
             clock_disp[7] = sec % 10;
-
-            // signal system to prevent it from entering suspend mode
-            if (powertick_last_tick_time + powertick_interval < tick.tick) {
-                sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
-                powertick_last_tick_time = tick.tick;
-            }
         }
     } else if (mode == 1 && timer_status == 3) {
         // blink clock
         is_clock_visible = (((tick.tick - timer_target_time) / 500000) & 1 == 1);
-        
-        // signal system to prevent it from entering suspend mode
-        if (powertick_last_tick_time + powertick_interval < tick.tick) {
-            sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
-            powertick_last_tick_time = tick.tick;
-        }
     }
 
     // render
@@ -158,9 +148,9 @@ void MainScreen::KeyDown(int btn) {
                     stopwatch_status = 1;
                     ResetClock();
                     stopwatch_started_time = tick.tick;
-                    powertick_last_tick_time = tick.tick;
                     rect_hud_draw = &rect_hud_s_running;
                     en->soloud.play(sl_c);
+                    StartPowerTickThread();
                     break;
                 case 1:
                     // running: pause stopwatch
@@ -168,6 +158,7 @@ void MainScreen::KeyDown(int btn) {
                     stopwatch_paused_time = tick.tick;
                     rect_hud_draw = &rect_hud_s_paused;
                     en->soloud.play(sl_g);
+                    StopPowerTickThread();
                     break;
                 case 2:
                     // paused: resume stopwatch
@@ -175,6 +166,7 @@ void MainScreen::KeyDown(int btn) {
                     stopwatch_started_time += tick.tick - stopwatch_paused_time;
                     rect_hud_draw = &rect_hud_s_running;
                     en->soloud.play(sl_c);
+                    StartPowerTickThread();
                     break;
             }
         } else {
@@ -201,6 +193,7 @@ void MainScreen::KeyDown(int btn) {
                             rect_hud_draw = &rect_hud_t_running;
                             en->soloud.play(sl_c);
                         }
+                        StartPowerTickThread();
                     }
                     break;
                 case 1:
@@ -209,6 +202,7 @@ void MainScreen::KeyDown(int btn) {
                     timer_paused_time = tick.tick;
                     rect_hud_draw = &rect_hud_t_paused;
                     en->soloud.play(sl_g);
+                    StopPowerTickThread();
                     break;
                 case 2:
                     // paused: resume timer
@@ -217,6 +211,7 @@ void MainScreen::KeyDown(int btn) {
                     timer_started_time += (tick.tick - timer_paused_time);
                     rect_hud_draw = &rect_hud_t_running;
                     en->soloud.play(sl_c);
+                    StartPowerTickThread();
                     break;
                 case 3:
                     // finished: reset
@@ -229,6 +224,7 @@ void MainScreen::KeyDown(int btn) {
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.stop(slh_beep);
                     en->soloud.play(sl_c);
+                    StopPowerTickThread();
                     break;
             }
         }
@@ -242,6 +238,7 @@ void MainScreen::KeyDown(int btn) {
                     ResetClock();
                     rect_hud_draw = &rect_hud_s_idle;
                     en->soloud.play(sl_c);
+                    StopPowerTickThread();
                     break;
                 case 2:
                     // paused: reset
@@ -249,6 +246,7 @@ void MainScreen::KeyDown(int btn) {
                     ResetClock();
                     rect_hud_draw = &rect_hud_s_idle;
                     en->soloud.play(sl_c);
+                    StopPowerTickThread();
                     break;
             }
         } else {
@@ -262,6 +260,7 @@ void MainScreen::KeyDown(int btn) {
                     ResetClock();
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.play(sl_c);
+                    StopPowerTickThread();
                     break;
                 case 1:
                     // running: reset
@@ -272,6 +271,7 @@ void MainScreen::KeyDown(int btn) {
                     ResetClock();
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.play(sl_c);
+                    StopPowerTickThread();
                     break;
                 case 2:
                     // paused: reset
@@ -282,6 +282,7 @@ void MainScreen::KeyDown(int btn) {
                     ResetClock();
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.play(sl_c);
+                    StopPowerTickThread();
                     break;
             }
         }
@@ -301,6 +302,7 @@ void MainScreen::KeyDown(int btn) {
             }
             ResetClock();
             en->soloud.play(sl_c);
+            StopPowerTickThread();
         }
     } else if (btn == SCE_CTRL_LEFT) {
         if (mode == 1 && timer_status == 0) {
@@ -375,4 +377,14 @@ void MainScreen::KeyUp(int btn) {
         is_immersive = !is_immersive;
         return;
     }
+}
+
+void MainScreen::StartPowerTickThread() {
+    should_power_tick = true;
+    SceUID tid = sceKernelCreateThread("vtpt", PowerTick, 0x10000100, 0x10000, 0, 0, NULL);
+    if (tid >= 0) sceKernelStartThread(tid, 0, NULL);
+}
+
+void MainScreen::StopPowerTickThread() {
+    should_power_tick = false;
 }
