@@ -18,8 +18,8 @@
 class Engine {
 public:
     Engine();
-    void run();
-    void setScreen(Screen* new_screen);
+    void Run();
+    void SetScreen(Screen* new_screen);
 
     bool is_running = true;
     bool is_screen_changeable = true;

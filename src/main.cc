@@ -5,16 +5,19 @@
  * as published by Sam Hocevar. See the LICENSE file for more details.
  */
 
+#include <psp2/kernel/processmgr.h>
+
 #include "main.hh"
 
 int main(int argc, char *argv[]) {
     Engine engine;
     
     MainScreen* scr = new MainScreen();
-    scr->init(&engine);
-    engine.setScreen(scr);
+    scr->Init(&engine);
+    engine.SetScreen(scr);
 
-    engine.run();
+    engine.Run();
 
+	sceKernelExitProcess(0);
     return 0;
 }

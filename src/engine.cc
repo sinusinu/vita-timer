@@ -27,6 +27,8 @@ Engine::Engine() {
     // init sdl and things
     SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
+
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
     
     window = SDL_CreateWindow("vita-timer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 960, 544, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, 0);
@@ -39,25 +41,23 @@ Engine::Engine() {
     soloud.init();
 }
 
-void Engine::run() {
+void Engine::Run() {
     // main loop
     while (is_running == true) {
         is_screen_changeable = false;
         sceCtrlReadBufferPositive(0, &pad, 1);
-        for (int i = 0; i < 12; i++) {  // there could be a better way to do this...
+        for (int i = 0; i < 12; i++) {
             if ((pad.buttons & btnorder[i]) != btnstat[i]) {
-                if ((pad.buttons & btnorder[i]) > 0) current_screen->key_down(btnorder[i]);
-                else current_screen->key_up(btnorder[i]);
+                if ((pad.buttons & btnorder[i]) > 0) current_screen->KeyDown(btnorder[i]);
+                else current_screen->KeyUp(btnorder[i]);
                 btnstat[i] = pad.buttons & btnorder[i];
             }
         }
         is_screen_changeable = true;
 
-        current_screen->update();
+        current_screen->Update();
     }
     
-    // cleanup
-    // is this necessary? seems like this won't be called anyway
     soloud.deinit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -67,9 +67,7 @@ void Engine::run() {
     SDL_Quit();
 }
 
-void Engine::setScreen(Screen* new_screen) {
-    if (is_screen_changeable == false) throw;   // do not change screen on key event function...?
-                                                // this protection is meaningless for this app since it uses only one screen anyway
-                                                // this part was copypasted from another project, and I'm lazy enough to leave it as is...
+void Engine::SetScreen(Screen* new_screen) {
+    if (is_screen_changeable == false) throw;
     current_screen = new_screen;
 }

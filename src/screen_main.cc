@@ -14,7 +14,7 @@
 #include "screen.hh"
 #include "buttons.hh"
 
-void MainScreen::init(Engine* engine) {
+void MainScreen::Init(Engine* engine) {
     en = engine;
     
     memset(&tick, 0, sizeof(tick));
@@ -39,7 +39,7 @@ void MainScreen::init(Engine* engine) {
     sl_c.load("app0:/assets/c.wav");
 }
 
-void MainScreen::update() {
+void MainScreen::Update() {
     // update
     sceRtcGetCurrentTick(&tick);
 
@@ -102,10 +102,13 @@ void MainScreen::update() {
 
     SDL_RenderCopy(en->renderer, tx_back, &rect_back, &rect_back);
 
-    if (is_clock_visible) draw_clock();
+    if (is_clock_visible) DrawClock();
 
-    SDL_RenderCopy(en->renderer, tx_number, rect_number_title_draw, &rect_number_title_dest);
-    SDL_RenderCopy(en->renderer, tx_hud, rect_hud_draw, &rect_hud_dest);
+    if (!is_immersive) {
+        SDL_RenderCopy(en->renderer, tx_number, rect_number_title_draw, &rect_number_title_dest);
+        SDL_RenderCopy(en->renderer, tx_hud, rect_hud_draw, &rect_hud_dest);
+        SDL_RenderCopy(en->renderer, tx_hud, &rect_hud_t_stse, &rect_hud_stse_dest);
+    }
     
     if (mode == 1 && timer_status == 0) {
         SDL_RenderCopy(en->renderer, tx_number, &rect_number_u, &rect_number_u_dest);
@@ -115,7 +118,7 @@ void MainScreen::update() {
     SDL_RenderPresent(en->renderer);
 }
 
-void MainScreen::reset_clock() {
+void MainScreen::ResetClock() {
     clock_disp[0] = 0;
     clock_disp[1] = 0;
     clock_disp[3] = 0;
@@ -124,11 +127,11 @@ void MainScreen::reset_clock() {
     clock_disp[7] = 0;
 }
 
-void MainScreen::draw_clock() {
+void MainScreen::DrawClock() {
     for (int i = 0; i < 8; i++) {
         SDL_Rect* rect_num;
         switch (clock_disp[i]) {
-            case 0: rect_num = &rect_number_0; break;   // this looks so dumb
+            case 0: rect_num = &rect_number_0; break;
             case 1: rect_num = &rect_number_1; break;
             case 2: rect_num = &rect_number_2; break;
             case 3: rect_num = &rect_number_3; break;
@@ -145,7 +148,7 @@ void MainScreen::draw_clock() {
     }
 }
 
-void MainScreen::key_down(int btn) {
+void MainScreen::KeyDown(int btn) {
     if (btn == en->which_enter) {
         if (mode == 0) {
             // stopwatch
@@ -153,7 +156,7 @@ void MainScreen::key_down(int btn) {
                 case 0:
                     // idle: start stopwatch
                     stopwatch_status = 1;
-                    reset_clock();
+                    ResetClock();
                     stopwatch_started_time = tick.tick;
                     powertick_last_tick_time = tick.tick;
                     rect_hud_draw = &rect_hud_s_running;
@@ -221,7 +224,7 @@ void MainScreen::key_down(int btn) {
                     timer_editing_digit = 0;
                     rect_number_u_dest.x = 80 + (100 * timer_editing_digit);
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
-                    reset_clock();
+                    ResetClock();
                     is_clock_visible = true;
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.stop(slh_beep);
@@ -236,14 +239,14 @@ void MainScreen::key_down(int btn) {
                 case 1:
                     // running: reset
                     stopwatch_status = 0;
-                    reset_clock();
+                    ResetClock();
                     rect_hud_draw = &rect_hud_s_idle;
                     en->soloud.play(sl_c);
                     break;
                 case 2:
                     // paused: reset
                     stopwatch_status = 0;
-                    reset_clock();
+                    ResetClock();
                     rect_hud_draw = &rect_hud_s_idle;
                     en->soloud.play(sl_c);
                     break;
@@ -256,7 +259,7 @@ void MainScreen::key_down(int btn) {
                     timer_editing_digit = 0;
                     rect_number_u_dest.x = 80 + (100 * timer_editing_digit);
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
-                    reset_clock();
+                    ResetClock();
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.play(sl_c);
                     break;
@@ -266,7 +269,7 @@ void MainScreen::key_down(int btn) {
                     timer_editing_digit = 0;
                     rect_number_u_dest.x = 80 + (100 * timer_editing_digit);
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
-                    reset_clock();
+                    ResetClock();
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.play(sl_c);
                     break;
@@ -276,7 +279,7 @@ void MainScreen::key_down(int btn) {
                     timer_editing_digit = 0;
                     rect_number_u_dest.x = 80 + (100 * timer_editing_digit);
                     rect_number_d_dest.x = 80 + (100 * timer_editing_digit);
-                    reset_clock();
+                    ResetClock();
                     rect_hud_draw = &rect_hud_t_idle;
                     en->soloud.play(sl_c);
                     break;
@@ -296,7 +299,7 @@ void MainScreen::key_down(int btn) {
                     rect_hud_draw = &rect_hud_t_idle;
                     break;
             }
-            reset_clock();
+            ResetClock();
             en->soloud.play(sl_c);
         }
     } else if (btn == SCE_CTRL_LEFT) {
@@ -364,6 +367,12 @@ void MainScreen::key_down(int btn) {
     }
 }
 
-void MainScreen::key_up(int btn) {
-    // nothing to do
+void MainScreen::KeyUp(int btn) {
+    if (btn == SCE_CTRL_START) {
+        en->is_running = false;
+        return;
+    } else if (btn == SCE_CTRL_SELECT) {
+        is_immersive = !is_immersive;
+        return;
+    }
 }

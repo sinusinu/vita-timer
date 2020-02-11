@@ -15,21 +15,21 @@ class Engine;
 
 class Screen {
 public:
-    virtual void init(Engine* engine) = 0;
-    virtual void update() = 0;
-    virtual void key_down(int btn) = 0;
-    virtual void key_up(int btn) = 0;
+    virtual void Init(Engine* engine) = 0;
+    virtual void Update() = 0;
+    virtual void KeyDown(int btn) = 0;
+    virtual void KeyUp(int btn) = 0;
 };
 
 class MainScreen : public Screen {
 public:
-    void init(Engine* engine);
-    void update();
-    void key_down(int btn);
-    void key_up(int btn);
+    void Init(Engine* engine);
+    void Update();
+    void KeyDown(int btn);
+    void KeyUp(int btn);
     
-    void reset_clock();
-    void draw_clock();
+    void ResetClock();
+    void DrawClock();
     
     Engine* en;
 
@@ -56,7 +56,8 @@ public:
     SDL_Rect rect_number_u = { 400, 300, 100, 75 }; // up arrow
     SDL_Rect rect_number_d = { 400, 375, 100, 75 }; // down arrow
     SDL_Texture* tx_hud;
-    SDL_Rect rect_hud_dest = { 224, 480, 512, 24 };
+    SDL_Rect rect_hud_dest = { 224, 466, 512, 24 };
+    SDL_Rect rect_hud_stse_dest = { 310, 494, 340, 16 };
     SDL_Rect rect_hud_s_idle = {0, 0, 512, 24};
     SDL_Rect rect_hud_s_running = {0, 24, 512, 24};
     SDL_Rect rect_hud_s_paused = {0, 48, 512, 24};
@@ -64,6 +65,7 @@ public:
     SDL_Rect rect_hud_t_running = {0, 96, 512, 24};
     SDL_Rect rect_hud_t_paused = {0, 120, 512, 24};
     SDL_Rect rect_hud_t_finished = {0, 144, 512, 24};
+    SDL_Rect rect_hud_t_stse = {0, 168, 512, 24};
 
     SDL_Rect* rect_number_title_draw = &rect_number_s;
     SDL_Rect* rect_hud_draw = &rect_hud_s_idle;
@@ -92,6 +94,8 @@ public:
 
     bool is_clock_visible = true;
     int clock_disp[8] = {0, 0, 10, 0, 0, 10, 0, 0};
+
+    bool is_immersive = false;
 
     // timer for preventing system from entering suspend mode
     SceUInt64 powertick_last_tick_time = 0;
